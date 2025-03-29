@@ -112,8 +112,7 @@ public class Repl implements AutoCloseable {
    * Starts the REPL and enters the main interaction loop.
    */
   public void start() {
-    printSuccess("AI REPL started. Type 'exit' to quit.");
-    printSuccess("Type ':help' for available commands.");
+    ReplFunctions.printBanner(this);
 
     try {
       mainLoop();
@@ -166,7 +165,7 @@ public class Repl implements AutoCloseable {
       } catch (UserInterruptException e) {
         printError("Interrupted");
       } catch (EndOfFileException e) {
-        printSuccess("Exiting REPL...");
+        printSuccess("Goodbye! ';'");
         break;
       } catch (Exception e) {
         logger.warn("Error processing input", e);

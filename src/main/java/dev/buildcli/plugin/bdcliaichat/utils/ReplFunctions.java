@@ -3,6 +3,7 @@ package dev.buildcli.plugin.bdcliaichat.utils;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static dev.buildcli.core.utils.BeautifyShell.*;
@@ -22,9 +23,6 @@ public class ReplFunctions {
     COMMANDS.put(":functions", "List available utility functions");
     COMMANDS.put(":vars", "List defined variables in the current session");
     COMMANDS.put(":clear", "Clear the screen");
-    COMMANDS.put(":save <filename>", "Save conversation history to a file");
-    COMMANDS.put(":load <filename>", "Load conversation history from a file");
-    COMMANDS.put(":system <text>", "Set a custom system prompt for the AI");
   }
 
   /**
@@ -90,10 +88,10 @@ public class ReplFunctions {
     repl.println(bold("\nDefined Variables:"));
 
     repl.println(italic("No variables are currently defined."));
-    repl.println("");
+    repl.println();
     repl.println("You can define variables using assignment syntax:");
     repl.println(yellowFg("var") + " myVariable = \"some value\"");
-    repl.println("");
+    repl.println();
     repl.println("Once defined, variables can be referenced in subsequent messages.");
   }
 
@@ -120,7 +118,7 @@ public class ReplFunctions {
       }
 
       // Display a welcome message after clearing
-      repl.println(bold(greenFg("AI REPL")) + " - Type " + yellowFg(":help") + " for commands");
+      printBanner(repl);
     } catch (IOException | InterruptedException e) {
       // If the clear command fails, fall back to printing newlines
       for (int i = 0; i < 50; i++) {
@@ -130,37 +128,10 @@ public class ReplFunctions {
     }
   }
 
-  /**
-   * Format text with syntax highlighting for a specific language.
-   * This is a utility method that can be exposed to the REPL.
-   *
-   * @param language The language for syntax highlighting
-   * @param code     The code text to format
-   * @return The formatted code
-   */
-  public static String formatCode(String language, String code) {
-    return "```" + language + "\n" + code + "\n```";
-  }
-
-  /**
-   * Helper method to display a nicely formatted list of items.
-   *
-   * @param repl  The Repl instance to use for output
-   * @param title The title for the list
-   * @param items The items to display
-   */
-  public static void displayList(Repl repl, String title, String... items) {
-    repl.println(bold("\n" + title + ":"));
-
-    if (items.length == 0) {
-      repl.println(italic("  No items to display"));
-      return;
-    }
-
-    Arrays.stream(items)
-        .map(item -> "  • " + item)
-        .forEach(repl::println);
-
-    repl.println("");
-  }
+ public static void printBanner(Repl repl) {
+    repl.println(table(List.of(
+        "BuildCLI AI Chat",
+        "0.0.1"
+    )));
+ }
 }
