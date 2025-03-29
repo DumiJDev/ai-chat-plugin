@@ -34,10 +34,9 @@ import static java.lang.Thread.sleep;
  * This class provides a chat-like interface for communication with an AI model.
  */
 public class Repl implements AutoCloseable {
-  // Substituindo o Logger Java pelo SLF4J
   private static final Logger logger = LoggerFactory.getLogger(Repl.class);
 
-  private static final int DEFAULT_TYPING_DELAY_MS = 20; // Reduced from 300ms for better UX
+  private static final int DEFAULT_TYPING_DELAY_MS = 20;
   private static final String PROMPT = "me > ";
   private static final String CONTINUATION_PROMPT = "... ";
   private static final String[] THINKING_ANIMATION = {
@@ -112,7 +111,7 @@ public class Repl implements AutoCloseable {
    * Starts the REPL and enters the main interaction loop.
    */
   public void start() {
-    ReplFunctions.printBanner(this);
+    ReplFunctions.clearScreen(this);
 
     try {
       mainLoop();
@@ -138,7 +137,7 @@ public class Repl implements AutoCloseable {
 
         // Handle exit command
         if ("exit".equalsIgnoreCase(line)) {
-          printSuccess("Exiting REPL...");
+          printSuccess("Goodbye! ';'");
           break;
         }
 
