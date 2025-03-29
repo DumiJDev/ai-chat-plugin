@@ -5,8 +5,8 @@ import dev.buildcli.core.actions.ai.AIService;
 import dev.buildcli.core.actions.ai.factories.GeneralAIServiceFactory;
 import dev.buildcli.core.utils.ai.IAParamsUtils;
 import dev.buildcli.core.utils.async.Async;
-import dev.buildcli.core.utils.config.ConfigContextLoader;
 import dev.buildcli.core.utils.markdown.MarkdownInterpreter;
+import org.jline.builtins.Completers;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.reader.impl.completer.AggregateCompleter;
@@ -18,14 +18,13 @@ import org.jline.utils.InfoCmp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static dev.buildcli.core.constants.ConfigDefaultConstants.AI_MODEL;
-import static dev.buildcli.core.constants.ConfigDefaultConstants.AI_VENDOR;
 import static dev.buildcli.core.utils.BeautifyShell.*;
 import static java.lang.Thread.sleep;
 
@@ -78,7 +77,9 @@ public class Repl implements AutoCloseable {
       );
 
       Completer completer = new AggregateCompleter(
-          new StringsCompleter(commands)
+          new StringsCompleter(commands),
+          new Completers.FileNameCompleter(),
+          new Completers.DirectoriesCompleter(new File("."))
       );
 
       // Configure line reader with history and completion
@@ -93,11 +94,7 @@ public class Repl implements AutoCloseable {
           .build();
 
       // Setup AI service from configuration
-      var config = ConfigContextLoader.getAllConfigs();
-      var aiParams = IAParamsUtils.createAIParams(
-          config.getProperty(AI_MODEL).orElse(null),
-          config.getProperty(AI_VENDOR).orElse(null)
-      );
+      var aiParams = IAParamsUtils.createAIParams();
 
       aiService = new GeneralAIServiceFactory().create(aiParams);
     } catch (IOException e) {
