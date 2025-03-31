@@ -2,11 +2,7 @@ package dev.buildcli.plugin.bdcliaichat.utils.repl;
 
 import dev.buildcli.core.actions.ai.AIChat;
 import dev.buildcli.core.actions.ai.AIService;
-import dev.buildcli.core.actions.ai.factories.GeneralAIServiceFactory;
-import dev.buildcli.core.constants.ConfigDefaultConstants;
-import dev.buildcli.core.utils.ai.IAParamsUtils;
 import dev.buildcli.core.utils.async.Async;
-import dev.buildcli.core.utils.config.ConfigContextLoader;
 import dev.buildcli.core.utils.markdown.MarkdownInterpreter;
 import dev.buildcli.plugin.bdcliaichat.utils.AIPromptInterpreter;
 import dev.buildcli.plugin.bdcliaichat.utils.speech.AISpeech;
@@ -31,7 +27,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static dev.buildcli.core.constants.ConfigDefaultConstants.AI_VENDOR;
 import static dev.buildcli.core.utils.BeautifyShell.*;
+import static dev.buildcli.core.utils.config.ConfigContextLoader.getAllConfigs;
+import static java.lang.System.getProperty;
 import static java.lang.Thread.sleep;
 import static java.time.Duration.ofMillis;
 
@@ -42,20 +41,26 @@ import static java.time.Duration.ofMillis;
 public class Repl implements AutoCloseable {
   private static final Logger logger = LoggerFactory.getLogger(Repl.class);
 
-  private static final String PROMPT = "%s > ".formatted(System.getProperty("user.name").toUpperCase());
-  private static final String AI_NAME = "%s >".formatted(ConfigContextLoader.getAllConfigs().getProperty(ConfigDefaultConstants.AI_VENDOR).orElse("jlama"));
+  private static final String PROMPT;
+  private static final String AI_NAME;
   private static final String[] THINKING_ANIMATION = {
       "⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"  // Braille pattern animation
   };
   private static final int THINKING_ANIMATION_DELAY_MS = 100;
 
-  private static final String AI_PROMPT = ConfigContextLoader.getAllConfigs().getProperty("buildcli.ai.chat.prompt").orElse("You are a funny assistant, you speak about: tech, tech news, STEAM topic. You cannot talk about gambiarra or religion or politic (or Javascript, its a joke, ignore if you want)");
+  private static final String AI_PROMPT = getAllConfigs().getProperty("buildcli.ai.chat.prompt").orElse("You are a funny assistant, you speak about: tech, tech news, STEAM topic. You cannot talk about gambiarra or religion or politic (or Javascript, its a joke, ignore if you want)");
+
+  static {
+    PROMPT = content(getProperty("user.name").toUpperCase()).padding(0, 1).brightBlueBg().blackFg().toString();
+    AI_NAME = content(getAllConfigs().getProperty(AI_VENDOR).orElse("jlama").toUpperCase()).padding(0, 1).brightGreenBg().blackFg().toString();
+  }
+
   final Map<String, String> variables = new HashMap<>();
   private final Terminal terminal;
   private final LineReader reader;
-  private final AIService aiService;
   private final MarkdownInterpreter markdownInterpreter;
   private final AISpeech aiSpeech;
+  private AIService aiService;
 
   /**
    * Creates a new REPL instance with default settings.
@@ -71,7 +76,7 @@ public class Repl implements AutoCloseable {
 
       // Configure available commands with descriptions for better auto-completion
       List<String> commands = Arrays.asList(
-          "exit", ":help", ":clear", ":var", ":vars"
+          "exit", ":help", ":clear", ":var", ":vars", ":new"
       );
 
       Completer completer = new AggregateCompleter(
@@ -86,15 +91,14 @@ public class Repl implements AutoCloseable {
           .parser(new DefaultParser())
           .completer(completer)
           .history(new DefaultHistory())
-          .variable(LineReader.HISTORY_FILE, System.getProperty("user.home") + "/.ai_db_repl_history")
+          .variable(LineReader.HISTORY_FILE, getProperty("user.home") + "/.ai_db_repl_history")
           .option(LineReader.Option.CASE_INSENSITIVE, true)
           .option(LineReader.Option.AUTO_FRESH_LINE, true)
           .build();
 
       // Setup AI service from configuration
-      var aiParams = IAParamsUtils.createAIParams();
 
-      aiService = new GeneralAIServiceFactory().create(aiParams);
+      aiService = ReplFunctions.iaChatInit();
     } catch (IOException e) {
       logger.error("Failed to initialize REPL", e);
       throw new RuntimeException("Failed to initialize terminal: " + e.getMessage(), e);
@@ -123,7 +127,7 @@ public class Repl implements AutoCloseable {
   private void mainLoop() throws IOException {
     while (true) {
       try {
-        String line = reader.readLine(PROMPT);
+        String line = reader.readLine(PROMPT + "\n");
 
         if (line == null || line.trim().isEmpty()) {
           continue;
@@ -172,6 +176,7 @@ public class Repl implements AutoCloseable {
   private void displayAIResponse(String aiMessage) {
     println();
     print(AI_NAME);
+    println();
 
     if ("true".equalsIgnoreCase(variables.getOrDefault("text", "true"))) {
       for (var line : aiMessage.split("\n")) {
@@ -290,9 +295,13 @@ public class Repl implements AutoCloseable {
    * @param command The command string
    */
   private void handleSpecialCommand(String command) {
-    String[] parts = command.substring(1).split("\\s+", 2);
+    if (!command.matches(":[A-Za-z]+( [A-Za-z0-9]+( )?=( )?.+)?")) {
+      logger.warn("Invalid command: {}", command);
+      return;
+    }
+
+    String[] parts = command.substring(1).trim().split("\\s+", 2);
     String cmd = parts[0].toLowerCase();
-    String args = parts[1];
 
     switch (cmd) {
       case "help":
@@ -304,8 +313,17 @@ public class Repl implements AutoCloseable {
       case "vars":
         ReplFunctions.listVariables(this);
         break;
+      case "new":
+        aiService = ReplFunctions.iaChatInit();
+        ReplFunctions.clearScreen(this);
+        break;
       case "var":
-        ReplFunctions.setVariable(this, args);
+        if (parts.length > 1) {
+          String args = parts[1];
+          ReplFunctions.setVariable(this, args);
+        } else {
+          logger.warn("Invalid variable: {}", parts[0]);
+        }
         break;
       default:
         printError("Unknown command: " + cmd);

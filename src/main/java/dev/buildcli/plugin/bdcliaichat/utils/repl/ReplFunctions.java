@@ -1,5 +1,7 @@
 package dev.buildcli.plugin.bdcliaichat.utils.repl;
 
+import dev.buildcli.core.actions.ai.AIService;
+import dev.buildcli.core.actions.ai.factories.GeneralAIServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import static dev.buildcli.core.utils.BeautifyShell.*;
+import static dev.buildcli.core.utils.ai.IAParamsUtils.createAIParams;
 
 /**
  * Utility class providing various helper functions for the REPL interface.
@@ -129,5 +132,9 @@ public final class ReplFunctions {
     repl.variables.put(name, value);
 
     repl.println(brightGreenFg("Set variable " + name + " " + value));
+  }
+
+  public static AIService iaChatInit() {
+    return new GeneralAIServiceFactory().create(createAIParams());
   }
 }
