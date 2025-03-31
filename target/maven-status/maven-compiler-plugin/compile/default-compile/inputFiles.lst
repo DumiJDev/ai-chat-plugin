@@ -1,4 +1,6 @@
 C:\Users\dumil\Documents\Projects\Java\bdcli-ai-chat\src\main\java\dev\buildcli\plugin\bdcliaichat\BdcliaichatCommand.java
 C:\Users\dumil\Documents\Projects\Java\bdcli-ai-chat\src\main\java\dev\buildcli\plugin\bdcliaichat\utils\AIPromptInterpreter.java
-C:\Users\dumil\Documents\Projects\Java\bdcli-ai-chat\src\main\java\dev\buildcli\plugin\bdcliaichat\utils\Repl.java
-C:\Users\dumil\Documents\Projects\Java\bdcli-ai-chat\src\main\java\dev\buildcli\plugin\bdcliaichat\utils\ReplFunctions.java
+C:\Users\dumil\Documents\Projects\Java\bdcli-ai-chat\src\main\java\dev\buildcli\plugin\bdcliaichat\utils\repl\Repl.java
+C:\Users\dumil\Documents\Projects\Java\bdcli-ai-chat\src\main\java\dev\buildcli\plugin\bdcliaichat\utils\repl\ReplFunctions.java
+C:\Users\dumil\Documents\Projects\Java\bdcli-ai-chat\src\main\java\dev\buildcli\plugin\bdcliaichat\utils\speech\AISpeech.java
+C:\Users\dumil\Documents\Projects\Java\bdcli-ai-chat\src\main\java\dev\buildcli\plugin\bdcliaichat\utils\speech\FreettsAISpeech.java

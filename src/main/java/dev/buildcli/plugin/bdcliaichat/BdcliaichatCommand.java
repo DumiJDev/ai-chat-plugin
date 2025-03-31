@@ -1,7 +1,8 @@
 package dev.buildcli.plugin.bdcliaichat;
 
 import dev.buildcli.plugin.BuildCLICommandPlugin;
-import dev.buildcli.plugin.bdcliaichat.utils.Repl;
+import dev.buildcli.plugin.bdcliaichat.utils.repl.Repl;
+import dev.buildcli.plugin.bdcliaichat.utils.speech.FreettsAISpeech;
 import picocli.CommandLine.Command;
 
 @Command(name = "chat", description = "Interactive AI Chat", mixinStandardHelpOptions = true)
