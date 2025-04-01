@@ -7,6 +7,7 @@ import dev.buildcli.core.utils.markdown.MarkdownInterpreter;
 import dev.buildcli.plugin.bdcliaichat.utils.AIPromptInterpreter;
 import dev.buildcli.plugin.bdcliaichat.utils.speech.AISpeech;
 import dev.buildcli.plugin.bdcliaichat.utils.speech.FreettsAISpeech;
+import dev.langchain4j.exception.UnresolvedModelServerException;
 import org.jline.builtins.Completers;
 import org.jline.reader.*;
 import org.jline.reader.impl.DefaultParser;
@@ -21,10 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static dev.buildcli.core.constants.ConfigDefaultConstants.AI_VENDOR;
@@ -100,7 +98,6 @@ public class Repl implements AutoCloseable {
 
       aiService = ReplFunctions.iaChatInit();
     } catch (IOException e) {
-      logger.error("Failed to initialize REPL", e);
       throw new RuntimeException("Failed to initialize terminal: " + e.getMessage(), e);
     }
     markdownInterpreter = new MarkdownInterpreter();
@@ -113,58 +110,48 @@ public class Repl implements AutoCloseable {
   public void start() {
     ReplFunctions.clearScreen(this);
 
-    try {
-      mainLoop();
-    } catch (IOException e) {
-      logger.error("Error in REPL operation", e);
-      printError("Fatal error: " + e.getMessage());
-    }
+    mainLoop();
   }
 
   /**
    * The main loop of the REPL that handles user input and AI responses.
    */
-  private void mainLoop() throws IOException {
+  private void mainLoop() {
     while (true) {
       try {
-        String line = reader.readLine(PROMPT + "\n");
-
-        if (line == null || line.trim().isEmpty()) {
-          continue;
-        }
-
-        line = line.trim();
+        var line = Optional.ofNullable(reader.readLine(PROMPT + "\n")).orElse("").trim();
 
         // Handle exit command
         if ("exit".equalsIgnoreCase(line)) {
-          printSuccess("Goodbye! ';'");
+          printSuccess("Sayonara, %s! 🥹 ".formatted(getProperty("user.name").toUpperCase()));
           break;
         }
 
         // Handle special commands
-        if (line.startsWith(":")) {
+        else if (line.startsWith(":")) {
           handleSpecialCommand(line);
-          continue;
-        }
+        } else aiInteractions(line);
 
-        // Process input with the prompt interpreter to enrich with file/URL content
-        String enrichedPrompt = new AIPromptInterpreter(line).interpret();
-
-        // Get AI response
-        String aiResponse = chat(enrichedPrompt);
-        if (aiResponse != null) {
-          displayAIResponse(markdownInterpreter.interpret(aiResponse));
-        }
-
-      } catch (UserInterruptException e) {
-        printError("Interrupted");
-      } catch (EndOfFileException e) {
-        printSuccess("Goodbye! ';'");
-        break;
       } catch (Exception e) {
-        logger.warn("Error processing input", e);
-        printError("Error: " + e.getMessage());
+        println();
+        switch (e) {
+          case UserInterruptException ui -> printError("Interrupted");
+          case EndOfFileException uof -> printError("Response Interrupted by user.");
+          case UnresolvedModelServerException ums -> printError("Cannot possible connect with your LLM engine/provider.");
+          default -> printError("Error processing input: " + e.getMessage());
+        }
       }
+    }
+  }
+
+  private void aiInteractions(String line) {
+    // Process input with the prompt interpreter to enrich with file/URL content
+    String enrichedPrompt = new AIPromptInterpreter(line).interpret();
+
+    // Get AI response
+    String aiResponse = chat(enrichedPrompt);
+    if (aiResponse != null) {
+      displayAIResponse(markdownInterpreter.interpret(aiResponse));
     }
   }
 
@@ -240,7 +227,7 @@ public class Repl implements AutoCloseable {
       String response = task.await();
 
       animationRunning.set(false);
-      if (animationThread != null && animationThread.isAlive()) {
+      if (animationThread.isAlive()) {
         animationThread.join(1000);
         if (animationThread.isAlive()) {
           animationThread.interrupt();
@@ -255,12 +242,11 @@ public class Repl implements AutoCloseable {
       return new AIPromptInterpreter(response).interpret();
     } catch (InterruptedException e) {
       animationRunning.set(false);
-      if (animationThread != null && animationThread.isAlive()) {
+      if (animationThread.isAlive()) {
         animationThread.interrupt();
       }
 
       Thread.currentThread().interrupt();
-      logger.warn("AI response generation interrupted", e);
       throw new RuntimeException("AI response generation was interrupted", e);
     }
   }

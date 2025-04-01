@@ -1,6 +1,7 @@
 package dev.buildcli.plugin.bdcliaichat.utils;
 
 import dev.buildcli.core.utils.OS;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
@@ -14,16 +15,15 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
 
 /**
  * Class responsible for interpreting an AI prompt and enriching it with contents
  * from local files and URLs found in the text.
  */
 public class AIPromptInterpreter {
-  private static final Logger LOGGER = Logger.getLogger(AIPromptInterpreter.class.getName());
+  private static final Logger LOGGER = LoggerFactory.getLogger(AIPromptInterpreter.class.getName());
   private static final int CONNECTION_TIMEOUT_MS = 5000;
   private static final HttpClient client = HttpClient.newHttpClient();
 
@@ -74,8 +74,7 @@ public class AIPromptInterpreter {
           String content = Files.readString(path, StandardCharsets.UTF_8);
           fileMap.put(filePath, content);
         } catch (IOException e) {
-          LOGGER.log(Level.WARNING, "Failed to read file: " + filePath, e);
-          fileMap.put(filePath, "Error reading file: " + e.getMessage());
+          LOGGER.warn("Failed to read file: " + filePath, e);
         }
       }
     }
@@ -109,8 +108,7 @@ public class AIPromptInterpreter {
         }
 
       } catch (IOException | InterruptedException e) {
-        LOGGER.log(Level.WARNING, "Failed trying to access: " + urlStr, e);
-        urlMap.put(urlStr, "Error accessing: " + e.getMessage());
+        LOGGER.warn("Failed trying to access: " + urlStr, e);
       }
     }
 
