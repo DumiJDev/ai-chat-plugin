@@ -3,7 +3,7 @@ package dev.buildcli.plugin.bdcliaichat.utils.repl;
 import dev.buildcli.core.actions.ai.AIChat;
 import dev.buildcli.core.actions.ai.AIService;
 import dev.buildcli.core.utils.async.Async;
-import dev.buildcli.core.utils.markdown.MarkdownInterpreter;
+import dev.buildcli.core.utils.console.markdown.MarkdownInterpreter;
 import dev.buildcli.plugin.bdcliaichat.utils.AIPromptInterpreter;
 import dev.buildcli.plugin.bdcliaichat.utils.speech.AISpeech;
 import dev.buildcli.plugin.bdcliaichat.utils.speech.FreettsAISpeech;

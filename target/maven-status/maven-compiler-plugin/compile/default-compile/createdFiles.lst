@@ -1,7 +1,0 @@
-dev\buildcli\plugin\bdcliaichat\utils\speech\AISpeech.class
-dev\buildcli\plugin\bdcliaichat\utils\speech\FreettsAISpeech.class
-dev\buildcli\plugin\bdcliaichat\utils\repl\Repl.class
-dev\buildcli\plugin\bdcliaichat\utils\repl\ReplFunctions.class
-dev\buildcli\plugin\bdcliaichat\utils\AIPromptInterpreter.class
-dev\buildcli\plugin\bdcliaichat\BdcliaichatCommand.class
-META-INF\extensions.idx
